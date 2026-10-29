@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King County House Price Predictor | XGBoost ML Model</title>
+  <meta name="description" content="Production-grade AI house price prediction interface powered by King County trained XGBoost Regression Pipeline.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="app-wrapper">
+    <header class="app-header">
+      <div class="header-container">
+        <div class="brand">
+          <div class="brand-badge">
+            <span class="pulse-dot"></span>
+            <span data-i18n="brandBadge">King County ML Model</span>
+          </div>
+          <h1 class="brand-title" data-i18n="appTitle">House Price Predictor</h1>
+          <p class="brand-subtitle" data-i18n="appSubtitle">Accurate residential market valuations in Washington State powered by an optimized XGBoost Pipeline with R&sup2; = 0.868.</p>
+        </div>
+        <div class="header-meta">
+          <div class="lang-switch-wrapper" id="langSwitchSection">
+            <button type="button" class="lang-toggle-btn" id="langToggleBtn"
+              aria-label="Toggle language between English and Arabic"
+              title="Toggle Language / تبديل اللغة">
+              <span class="lang-icon">&#127760;</span>
+              <span class="lang-text" id="langText">العربية</span>
+            </button>
+          </div>
+          <a href="/docs" target="_blank" rel="noopener noreferrer" class="docs-link" id="apiDocsLink">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <span data-i18n="swaggerDocs">Swagger API Docs</span>
+          </a>
+          <div class="status-indicator" id="systemHealthBadge" title="Backend Health Status">
+            <span class="status-circle" id="healthCircle"></span>
+            <span id="healthLabel" data-i18n="checkingApi">Checking API...</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section class="presets-section">
+        <div class="presets-header">
+          <span class="section-tag" data-i18n="quickStart">Quick Start</span>
+          <span class="presets-title" data-i18n="loadPresets">Load Sample Real Estate Presets:</span>
+        </div>
+        <div class="presets-grid" id="presetsContainer">
+          <button type="button" class="preset-btn active" data-preset="suburban" id="presetSuburban">
+            <span class="preset-icon">&#127969;</span>
+            <span class="preset-text">
+              <strong data-i18n="presetSuburbanTitle">Seattle Suburban</strong>
+              <small data-i18n="presetSuburbanDesc">3 Bed, 2.25 Bath, Grade 7</small>
+            </span>
+          </button>
+          <button type="button" class="preset-btn" data-preset="luxury" id="presetLuxury">
+            <span class="preset-icon">&#128142;</span>
+            <span class="preset-text">
+              <strong data-i18n="presetLuxuryTitle">Waterfront Luxury</strong>
+              <small data-i18n="presetLuxuryDesc">4 Bed, 3.5 Bath, Waterfront, Grade 10</small>
+            </span>
+          </button>
+          <button type="button" class="preset-btn" data-preset="cottage" id="presetCottage">
+            <span class="preset-icon">&#129397;</span>
+            <span class="preset-text">
+              <strong data-i18n="presetCottageTitle">Cozy Starter Home</strong>
+              <small data-i18n="presetCottageDesc">2 Bed, 1.0 Bath, Grade 6</small>
+            </span>
+          </button>
+          <button type="button" class="preset-btn" data-preset="bellevue" id="presetBellevue">
+            <span class="preset-icon">&#127961;&#65039;</span>
+            <span class="preset-text">
+              <strong data-i18n="presetBellevueTitle">Bellevue Executive</strong>
+              <small data-i18n="presetBellevueDesc">5 Bed, 4.0 Bath, Grade 9</small>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <div class="app-grid">
+        <div class="card form-card">
+          <div class="card-header">
+            <h2 data-i18n="formCardTitle">Property Characteristics</h2>
+            <p data-i18n="formCardSubtitle">Provide actual house specifications to receive an instant ML valuation.</p>
+          </div>
+          <form id="predictionForm" novalidate>
+            <div class="form-group-section">
+              <h3 class="group-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                </svg>
+                <span data-i18n="groupCoreStructure">Core Structure</span>
+              </h3>
+              <div class="form-row-3">
+                <div class="field-wrap">
+                  <label for="bedrooms" data-i18n="labelBedrooms">Bedrooms</label>
+                  <input type="number" id="bedrooms" name="bedrooms" min="0" max="33" step="1" required>
+                  <span class="field-hint" data-i18n="hintBedrooms">e.g. 3</span>
+                </div>
+                <div class="field-wrap">
+                  <label for="bathrooms" data-i18n="labelBathrooms">Bathrooms</label>
+                  <input type="number" id="bathrooms" name="bathrooms" min="0" max="12" step="0.25" required>
+                  <span class="field-hint" data-i18n="hintBathrooms">e.g. 2.25</span>
+                </div>
+                <div class="field-wrap">
+                  <label for="floors" data-i18n="labelFloors">Floors</label>
+                  <input type="number" id="floors" name="floors" min="1" max="4" step="0.5" required>
+                  <span class="field-hint" data-i18n="hintFloors">e.g. 2.0</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group-section">
+              <h3 class="group-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+                <span data-i18n="groupAreaLiving">Area &amp; Living Space (sq ft)</span>
+              </h3>
+              <div class="form-row-2">
+                <div class="field-wrap">
+                  <label for="sqft_living" data-i18n="labelSqftLiving">Living Space (sqft)</label>
+                  <input type="number" id="sqft_living" name="sqft_living" min="200" max="20000" step="10" required>
+                  <span class="field-hint" data-i18n="hintSqftLiving">Total interior living area</span>
+                </div>
+                <div class="field-wrap">
+                  <label for="sqft_lot" data-i18n="labelSqftLot">Lot Size (sqft)</label>
+                  <input type="number" id="sqft_lot" name="sqft_lot" min="300" max="2000000" step="10" required>
+                  <span class="field-hint" data-i18n="hintSqftLot">Land parcel area</span>
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="field-wrap">
+                  <label for="sqft_above" data-i18n="labelSqftAbove">Above Ground (sqft)</label>
+                  <input type="number" id="sqft_above" name="sqft_above" min="200" max="15000" step="10" required>
+                  <span class="field-hint" data-i18n="hintSqftAbove">Excludes basement</span>
+                </div>
+                <div class="field-wrap">
+                  <label for="sqft_basement" data-i18n="labelSqftBasement">Basement Area (sqft)</label>
+                  <input type="number" id="sqft_basement" name="sqft_basement" min="0" max="10000" step="10" required>
+                  <span class="field-hint" data-i18n="hintSqftBasement">0 if no basement</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group-section">
+              <h3 class="group-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <span data-i18n="groupQualityRating">Quality &amp; Rating</span>
+              </h3>
+              <div class="form-row-3">
+                <div class="field-wrap">
+                  <label for="waterfront" data-i18n="labelWaterfront">Waterfront</label>
+                  <select id="waterfront" name="waterfront" required>
+                    <option value="0" data-i18n="optNo">No</option>
+                    <option value="1" data-i18n="optYes">Yes</option>
+                  </select>
+                  <span class="field-hint" data-i18n="hintWaterfront">Shoreline access</span>
+                </div>
+                <div class="field-wrap">
+                  <label for="view" data-i18n="labelView">View Score</label>
+                  <select id="view" name="view" required>
+                    <option value="0" data-i18n="view0">0 - None</option>
+                    <option value="1" data-i18n="view1">1 - Fair</option>
+                    <option value="2" data-i18n="view2">2 - Average</option>
+                    <option value="3" data-i18n="view3">3 - Good</option>
+                    <option value="4" data-i18n="view4">4 - Excellent</option>
+                  </select>
+                  <span class="field-hint" data-i18n="hintView">0-4 scale</span>
+                </div>
+                <div class="field-wrap">
+                  <label for="condition" data-i18n="labelCondition">Condition</label>
+                  <select id="condition" name="condition" required>
+                    <option value="1">1</option><option value="2">2</option>
+                    <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                  </select>
+                  <span class="field-hint" data-i18n="hintCondition">1-5 scale</span>
+                </div>
+              </div>
+              <div class="form-row-1">
+                <div class="field-wrap">
+                  <label for="grade" data-i18n="labelGrade">Building Grade</label>
+                  <select id="grade" name="grade" required>
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                    <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                    <option value="13">13</option>
+                  </select>
+                  <span class="field-hint" data-i18n="hintGrade">King County grade 1-13 (avg = 7)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group-section">
+              <h3 class="group-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span data-i18n="groupLocation">Location &amp; Construction Year</span>
+              </h3>
+              <div class="form-row-2">
+                <div class="field-wrap">
+                  <label for="yr_built" data-i18n="labelYrBuilt">Year Built</label>
+                  <input type="number" id="yr_built" name="yr_built" min="1900" max="2026" step="1" required>
+                  <span class="field-hint" data-i18n="hintYrBuilt">e.g. 1951</span>
+                </div>
+                <div class="field-wrap">
+                  <label for="yr_renovated" data-i18n="labelYrRenovated">Year Renovated</label>
+                  <input type="number" id="yr_renovated" name="yr_renovated" min="0" max="2026" step="1" required>
+                  <span class="field-hint" data-i18n="hintYrRenovated">0 if never renovated</span>
+                </div>
+              </div>
+              <div class="form-row-3">
+                <div class="field-wrap">
+                  <label for="zipcode" data-i18n="labelZipcode">King Co. Zipcode</label>
+                  <input type="number" id="zipcode" name="zipcode" min="98000" max="98999" step="1" required>
+                  <span class="field-hint" data-i18n="hintZipcode">e.g. 98125</span>
+                </div>
+                <div class="field-wrap">
+                  <label for="lat" data-i18n="labelLat">Latitude</label>
+                  <input type="number" id="lat" name="lat" min="47.0" max="48.0" step="0.0001" required>
+                  <span class="field-hint" data-i18n="hintLat">47.15 to 47.78</span>
+                </div>
+                <div class="field-wrap">
+                  <label for="long" data-i18n="labelLong">Longitude</label>
+                  <input type="number" id="long" name="long" min="-123.0" max="-121.0" step="0.0001" required>
+                  <span class="field-hint" data-i18n="hintLong">-122.52 to -121.31</span>
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="field-wrap">
+                  <label for="sqft_living15" data-i18n="labelSqftLiving15">Neighbors Avg Living (sqft)</label>
+                  <input type="number" id="sqft_living15" name="sqft_living15" min="200" max="10000" step="10" required>
+                  <span class="field-hint" data-i18n="hintSqftLiving15">Nearest 15 homes</span>
+                </div>
+                <div class="field-wrap">
+                  <label for="sqft_lot15" data-i18n="labelSqftLot15">Neighbors Avg Lot (sqft)</label>
+                  <input type="number" id="sqft_lot15" name="sqft_lot15" min="300" max="1000000" step="10" required>
+                  <span class="field-hint" data-i18n="hintSqftLot15">Nearest 15 parcels</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" id="submitBtn" class="btn btn-primary">
+                <span class="btn-spinner" id="btnSpinner" aria-hidden="true"></span>
+                <span id="btnIcon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </span>
+                <span id="btnText" data-i18n="btnCalculate">Calculate Estimated Price</span>
+              </button>
+              <button type="button" id="resetBtn" class="btn btn-secondary" data-i18n="btnReset">Reset Fields</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card result-card" id="resultCard">
+          <div class="card-header">
+            <h2 data-i18n="resultCardTitle">Model Prediction Output</h2>
+            <p data-i18n="resultCardSubtitle">Live inference result returned by the FastAPI prediction pipeline.</p>
+          </div>
+          <div class="alert-banner" id="errorBanner" style="display: none;">
+            <div class="alert-icon">&#9888;&#65039;</div>
+            <div class="alert-content">
+              <strong id="errorTitle" data-i18n="errorTitle">Request Error</strong>
+              <p id="errorMessage" data-i18n="errorMessage">Unable to process the prediction request.</p>
+            </div>
+          </div>
+          <div class="empty-state" id="emptyState">
+            <div class="empty-icon">&#127960;</div>
+            <h3 data-i18n="emptyStateTitle">Ready for Prediction</h3>
+            <p data-i18n="emptyStateDesc">Adjust the property parameters or pick a preset scenario, then click <strong data-i18n="btnCalculate">Calculate Estimated Price</strong> to see the real ML inference.</p>
+          </div>
+          <div class="result-details" id="resultDetails" style="display: none;">
+            <div class="price-hero">
+              <span class="price-label" data-i18n="estimatedMarketValue">Estimated Market Value</span>
+              <div class="price-display">
+                <span class="currency-symbol">$</span>
+                <span class="price-value" id="displayPrice">0</span>
+              </div>
+              <div class="model-badge">
+                <span class="badge-icon">&#129302;</span>
+                <span id="displayModelName">XGBoost Regressor (Pipeline)</span>
+              </div>
+            </div>
+            <div class="feature-metrics">
+              <h4 data-i18n="derivedFeaturesTitle">Calculated Derived Features &amp; Key Highlights</h4>
+              <div class="metrics-grid">
+                <div class="metric-pill">
+                  <span class="metric-name" data-i18n="metricHouseAge">House Age (2015 Base)</span>
+                  <span class="metric-val" id="metricAge">-</span>
+                </div>
+                <div class="metric-pill">
+                  <span class="metric-name" data-i18n="metricTotalRooms">Total Rooms (Beds + Baths)</span>
+                  <span class="metric-val" id="metricRooms">-</span>
+                </div>
+                <div class="metric-pill">
+                  <span class="metric-name" data-i18n="metricCountyGrade">County Grade</span>
+                  <span class="metric-val" id="metricGrade">-</span>
+                </div>
+                <div class="metric-pill">
+                  <span class="metric-name" data-i18n="metricWaterfrontAccess">Waterfront Access</span>
+                  <span class="metric-val" id="metricWaterfront">-</span>
+                </div>
+              </div>
+            </div>
+            <div class="influence-box">
+              <div class="influence-title">
+                <span data-i18n="topDriversTitle">Top Model Valuation Drivers</span>
+                <span class="subtext" data-i18n="topDriversSubtext">Based on XGBoost Feature Importance</span>
+              </div>
+              <ul class="drivers-list">
+                <li><strong data-i18n="driver1Name">Grade (27.6%)</strong>: <span data-i18n="driver1Desc">King County structural craftsmanship &amp; architectural level.</span></li>
+                <li><strong data-i18n="driver2Name">Waterfront (22.2%)</strong>: <span data-i18n="driver2Desc">Premium waterfront shoreline access.</span></li>
+                <li><strong data-i18n="driver3Name">Living Space (16.7%)</strong>: <span data-i18n="driver3Desc">Interior square footage of heated living space.</span></li>
+                <li><strong data-i18n="driver4Name">Lat/Long (10.2%)</strong>: <span data-i18n="driver4Desc">Neighborhood micro-location and proximity.</span></li>
+              </ul>
+            </div>
+            <div class="timestamp-meta" id="predictionTimestamp" data-i18n="predictionJustNow">Prediction evaluated just now</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-container">
+        <div class="footer-info">
+          <p><strong data-i18n="footerTitle">King County Real Estate ML Engine</strong> &bull; <span data-i18n="footerAssignment">LMOPS Assignment</span></p>
+          <small data-i18n="footerSubtext">Trained on 21,613 verified King County transactions &bull; Built with FastAPI &amp; XGBoost</small>
+        </div>
+        <div class="theme-switch-wrapper" id="themeSwitchSection">
+          <span class="theme-label" id="currentThemeLabel" data-i18n="darkMode">Dark Mode</span>
+          <button type="button" class="theme-toggle-btn" id="themeToggleBtn"
+            aria-label="Toggle theme between Light and Dark mode"
+            title="Toggle theme (Light / Dark)">
+            <span class="theme-icon sun-icon" id="sunIcon" aria-hidden="true">&#9728;&#65039;</span>
+            <span class="theme-icon moon-icon" id="moonIcon" aria-hidden="true">&#127769;</span>
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
